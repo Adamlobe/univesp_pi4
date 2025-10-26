@@ -4,9 +4,7 @@ import numpy as np
 
 # %%
 df = pd.read_csv('base/INMET_SE_SP_A701_SAO PAULO - MIRANTE_01-01-2024_A_31-12-2024.CSV', sep=';', encoding='latin-1')
-df.head()
 
-#%%
 #%%
 colunas = [
        'Data', 
