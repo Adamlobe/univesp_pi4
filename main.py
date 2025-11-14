@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 
 # %%
+# url https://portal.inmet.gov.br/uploads/dadoshistoricos/2024.zip
 df = pd.read_csv('base/INMET_SE_SP_A701_SAO PAULO - MIRANTE_01-01-2024_A_31-12-2024.CSV', sep=';', encoding='latin-1')
 
 #%%
@@ -46,30 +47,51 @@ df['INVERNO'] = (df['MES'].isin([6, 7, 8])).astype(int)
 #%%
 df['DIURNO'] = np.where(df['HORA'].between(6, 18), 1, 0)
 df['NOTURNO'] = np.where((df['HORA'] >= 19) | (df['HORA'] <= 5), 1, 0)
+df.head()
 
 #%%
+import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
+# Dados
 y = df['TEMPERATURA']
 X = df[['UMIDADE','HORA','PRIMAVERA','VERAO','OUTONO','INVERNO','DIURNO']]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=False)
+# Divisão treino/teste
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, shuffle=False
+)
 
+# Treinar modelo
 model = LinearRegression()
 model.fit(X_train, y_train)
-y_pred = model.predict(X)
 
-mse = mean_squared_error(y, y_pred)
+# Previsões (apenas no conjunto de teste)
+y_pred = model.predict(X_test)
+
+# Avaliar modelo (usando y_test e y_pred)
+mse = mean_squared_error(y_test, y_pred)
 rmse = np.sqrt(mse)
-mae = mean_absolute_error(y, y_pred)
-r2 = r2_score(y, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+y_pred_train = model.predict(X_train)
+r2_train = r2_score(y_train, y_pred_train)
 
-print(f"\n=== RESULTADOS DO MODELO ===")
-print(f"Coeficientes: {model.coef_}")
-print(f"Intercepto: {model.intercept_:.6f}")
-print(f"R²: {r2:.2f}")
-print(f"MSE: {mse:.2f}")
-print(f"RMSE: {rmse:.2f}")
-print(f"MAE: {mae:.2f}")
+#%%
+print("\n=== RESULTADOS DO MODELO ===")
+print(f"Coeficientes..................: {model.coef_}")
+print(f"Intercepto....................: {model.intercept_:.2f}")
+print(f"R² (treinamento)..............: {r2_train:.2f}")
+print(f"R² (teste)....................: {r2:.2f}")
+print(f"Erro Quadrático Médio (MSE)...: {mse:.2f}")
+print(f"Raiz do EQM (RMSE)............: {rmse:.2f}")
+print(f"Erro Absoluto Médio (MAE).....: {mae:.2f}")
+
+#%%
+#import joblib
+
+#joblib.dump(model, 'modelo_LinearRegression.pkl')
+
+# %%
